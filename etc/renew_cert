@@ -1,0 +1,49 @@
+#!/usr/bin/env bash
+
+set -euo pipefail
+
+DOMAIN="${1:-}"
+LOGFILE="/var/log/renew_cert.log"
+CERT_PATH="/etc/letsencrypt/live/${DOMAIN}/cert.pem"
+
+if [[ -z "$DOMAIN" ]]; then
+    echo "Usage: $0 <domain>"
+    exit 1
+fi
+
+echo "===== Renewing cert for ${DOMAIN} =====" | tee -a "$LOGFILE"
+
+# Check if cert exists
+if [[ ! -f "$CERT_PATH" ]]; then
+    echo "❌ Certificate not found at $CERT_PATH"
+    exit 2
+fi
+
+# Show current expiry
+echo "📆 Current cert expiry:" | tee -a "$LOGFILE"
+openssl x509 -enddate -noout -in "$CERT_PATH" | tee -a "$LOGFILE"
+
+# Check if port 80 is reachable
+echo "🌐 Checking if port 80 is reachable..."
+if ! curl -s --connect-timeout 5 "http://${DOMAIN}/.well-known/acme-challenge/test" >/dev/null; then
+    echo "❌ Port 80 is not reachable for ${DOMAIN} — aborting." | tee -a "$LOGFILE"
+    exit 3
+fi
+
+# Attempt renewal
+echo "🔐 Running certbot renewal..." | tee -a "$LOGFILE"
+if sudo certbot certonly --nginx --cert-name "$DOMAIN" --key-type rsa >>"$LOGFILE" 2>&1; then
+    echo "✅ Renewal succeeded." | tee -a "$LOGFILE"
+    
+    echo "📆 New cert expiry:" | tee -a "$LOGFILE"
+    openssl x509 -enddate -noout -in "$CERT_PATH" | tee -a "$LOGFILE"
+
+    echo "🔄 Reloading nginx..." | tee -a "$LOGFILE"
+    sudo nginx -t && sudo systemctl reload nginx
+
+    echo "✅ All done." | tee -a "$LOGFILE"
+else
+    echo "❌ Certbot renewal failed. Check $LOGFILE for details."
+    exit 4
+fi
+

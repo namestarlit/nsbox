@@ -106,6 +106,9 @@ if [[ ! -e "$SOURCE_PATH" ]]; then
     exit 1
 fi
 
+mkdir -p "$BACKUP_DIR"
+BACKUP_DIR="$(readlink -f "$BACKUP_DIR")"
+
 if [[ -z "$NAME_PREFIX" ]]; then
     if [[ "$SOURCE_PATH" == "/" ]]; then
         NAME_PREFIX="rootfs"
@@ -116,8 +119,6 @@ fi
 
 BACKUP_DATE="$(date +%Y-%m-%d_%H-%M-%S)"
 BACKUP_FILE="$BACKUP_DIR/${NAME_PREFIX}_${BACKUP_DATE}.tar.gz"
-
-mkdir -p "$BACKUP_DIR"
 
 TAR_ARGS=(--create --gzip --file "$BACKUP_FILE")
 

@@ -133,6 +133,14 @@ else
     echo "SSH key already exists: $PRIVATE_KEY"
 fi
 
+if [[ ! -f "$PUBLIC_KEY" ]]; then
+    echo "Generating missing public key: $PUBLIC_KEY"
+    PUBLIC_KEY_TMP="$(mktemp "${PUBLIC_KEY}.tmp.XXXXXX")"
+    ssh-keygen -y -f "$PRIVATE_KEY" > "$PUBLIC_KEY_TMP"
+    mv "$PUBLIC_KEY_TMP" "$PUBLIC_KEY"
+    chmod 600 "$PUBLIC_KEY"
+fi
+
 # Install sshpass if not available
 if ! command -v sshpass >/dev/null 2>&1; then
     if [[ "$INSTALL_SSHPASS" == true ]]; then

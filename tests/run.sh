@@ -400,6 +400,15 @@ test_setup_ssh_key_reconciles_known_hosts() {
     assert_contains "$output" "ssh-keygen -R" "setup_ssh_key removes old known_hosts entries before appending"
 }
 
+test_setup_ssh_key_regenerates_missing_public_key() {
+    local output
+    output="$(sed -n '117,145p' "$ROOT_DIR/guides/server-bootstrap/setup_ssh_key.sh")"
+    assert_contains "$output" 'if [[ ! -f "$PUBLIC_KEY" ]]; then' "setup_ssh_key checks for missing public key"
+    assert_contains "$output" 'PUBLIC_KEY_TMP="$(mktemp "${PUBLIC_KEY}.tmp.XXXXXX")"' "setup_ssh_key creates a temp file for public key regeneration"
+    assert_contains "$output" 'ssh-keygen -y -f "$PRIVATE_KEY" > "$PUBLIC_KEY_TMP"' "setup_ssh_key writes regenerated public key to temp file"
+    assert_contains "$output" 'mv "$PUBLIC_KEY_TMP" "$PUBLIC_KEY"' "setup_ssh_key atomically replaces the public key on success"
+}
+
 test_setup_deploy_user_detects_ssh_unit() {
     local output
     output="$(sed -n '1,240p' "$ROOT_DIR/guides/deploy-host/setup_deploy_user.sh")"
@@ -463,6 +472,12 @@ test_serverbackup_excludes_only_archive_when_backup_dir_equals_source() {
     output="$(sed -n '124,140p' "$ROOT_DIR/refs/backups/serverbackup.sh")"
     assert_contains "$output" 'elif [[ "$BACKUP_DIR" == "$SOURCE_PATH" ]]; then' "serverbackup handles backup dir equal to source separately"
     assert_contains "$output" '--exclude="$(basename "$BACKUP_FILE")"' "serverbackup excludes only generated archive when backup dir equals source"
+}
+
+test_serverbackup_canonicalizes_backup_dir() {
+    local output
+    output="$(sed -n '100,125p' "$ROOT_DIR/refs/backups/serverbackup.sh")"
+    assert_contains "$output" 'BACKUP_DIR="$(readlink -f "$BACKUP_DIR")"' "serverbackup canonicalizes backup dir before exclusion checks"
 }
 
 test_ssh_keygen_missing_type_value() {
@@ -736,6 +751,7 @@ main() {
     test_serverbackup_missing_source_value
     test_serverbackup_keep_zero_skips_pruning
     test_serverbackup_excludes_only_archive_when_backup_dir_equals_source
+    test_serverbackup_canonicalizes_backup_dir
     test_system_info_tries_plain_inxi_first
     test_system_specs_missing_output_value
     test_system_specs_guards_unset_lvm_map_entries
@@ -761,6 +777,7 @@ main() {
     test_app_ops_superset_rejects_zero_password_bytes
     test_superset_parser_uses_python_csv
     test_setup_ssh_key_reconciles_known_hosts
+    test_setup_ssh_key_regenerates_missing_public_key
     test_setup_deploy_user_detects_ssh_unit
     test_setup_deploy_key_missing_user_value
     test_setup_deploy_key_resolves_home_from_passwd

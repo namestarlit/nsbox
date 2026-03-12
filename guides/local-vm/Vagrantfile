@@ -1,0 +1,40 @@
+# Purpose: define a reusable local Ubuntu VM for the local-vm guide.
+# Problem Solved: recreate a known Vagrant environment with fixed ports, private IP,
+# provider settings, and a synced project directory.
+#
+# How to use:
+#   cd guides/local-vm
+#   vagrant up
+#   vagrant ssh
+#
+# Notes:
+#   - Requires Vagrant and VirtualBox.
+#   - Assumes host ports 8000 and 8082 are free.
+#   - Syncs the repository root into /home/vagrant/nsbox.
+
+Vagrant.configure("2") do |config|
+  # Base Image: Ubuntu 22.04 LTS (Pinned for consistency)
+  config.vm.box = "ubuntu/jammy64"
+  config.vm.box_version = "20241002.0.0"
+
+  # Network: Port Forwarding
+  # Access Guest Port 8000 (Middleware) on Host Port 8000
+  config.vm.network "forwarded_port", guest: 80, host: 8000
+  # Access Guest Port 8080 (LIMS) on Host Port 8080
+  config.vm.network "forwarded_port", guest: 8082, host: 8082
+
+  # Network: Private IP for static access
+  config.vm.network "private_network", ip: "192.168.56.10"
+
+  # Provider Configuration (VirtualBox)
+  config.vm.provider "virtualbox" do |vb|
+    vb.memory = "4096"
+    vb.cpus = 2
+    vb.name = "ZanLIS-CBW"
+  end
+
+  # Synced Folders
+  # Maps the root of the repository to ~/nsbox in the VM
+  # Note: We map to a subdirectory to avoid masking the .ssh folder
+  config.vm.synced_folder "../../", "/home/vagrant/nsbox"
+end

@@ -1,4 +1,0 @@
-#!/usr/bin/env bash
-# Displays system and hardware information
-
-sudo inxi -Fz

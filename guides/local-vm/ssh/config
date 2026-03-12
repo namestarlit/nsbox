@@ -1,0 +1,17 @@
+# Purpose: example SSH host entry for the VM created by guides/local-vm/Vagrantfile.
+# Problem Solved: provide a short alias for connecting to the VM without repeating
+# the host IP and user each time.
+#
+# How to use:
+#   - Copy this block into ~/.ssh/config, or adapt it to your local SSH setup.
+#   - After that, connect with: ssh vagrant
+#
+# Notes:
+#   - Assumes the VM private IP is 192.168.56.10.
+#   - Assumes the SSH key is ~/.ssh/id_rsa.
+#   - Adjust IdentityFile if your Vagrant VM uses a different key.
+
+Host vagrant
+    HostName 192.168.56.10
+    User vagrant
+    IdentityFile ~/.ssh/id_rsa

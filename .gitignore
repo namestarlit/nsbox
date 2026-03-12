@@ -1,1 +1,30 @@
-*txt
+# Generated outputs
+*.log
+*.out
+*.pid
+*.sql
+*.csv
+*.txt
+
+# Secrets and local env
+.env
+.env.*
+!.env.example
+
+# Python
+__pycache__/
+.pytest_cache/
+.mypy_cache/
+.ruff_cache/
+*.pyc
+
+# Local VM state
+.vagrant/
+
+# OS/editor noise
+.DS_Store
+Thumbs.db
+
+# Temporary files
+tmp/
+temp/

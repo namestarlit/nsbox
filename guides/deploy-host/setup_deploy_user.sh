@@ -166,7 +166,18 @@ if ! sshd -t -f "$SSH_CONFIG"; then
     echo "Error: SSH configuration validation failed. Restored previous config." >&2
     exit 1
 else
-    restart_ssh_service
+    if ! restart_ssh_service; then
+        echo "Error: SSH service restart failed. Restoring the previous configuration." >&2
+        cp "$SSH_BACKUP" "$SSH_CONFIG"
+        if ! sshd -t -f "$SSH_CONFIG"; then
+            echo "Error: restored SSH configuration failed validation; backup is at '$SSH_BACKUP'." >&2
+            exit 1
+        fi
+        if ! restart_ssh_service; then
+            echo "Error: SSH service could not be restarted with the restored configuration; backup is at '$SSH_BACKUP'." >&2
+        fi
+        exit 1
+    fi
 fi
 
 # 5. Optionally, lock the deploy user's shell (uncomment if desired)

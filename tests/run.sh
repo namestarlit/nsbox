@@ -67,6 +67,11 @@ test_serverbackup_dry_run() {
     output="$(bash "$ROOT_DIR/refs/backups/serverbackup.sh" --source "$tmpdir/source" --backup-dir "$tmpdir/backups" --keep 2 --name-prefix sample --exclude '*.tmp' --dry-run 2>&1)"
     status=$?
     set -e
+    if [[ ! -e "$tmpdir/backups" ]]; then
+        pass "serverbackup dry-run does not create backup directory"
+    else
+        fail "serverbackup dry-run does not create backup directory"
+    fi
     rm -rf "$tmpdir"
     assert_success "$status" "serverbackup dry-run exits successfully"
     assert_contains "$output" "Dry run: would create backup archive:" "serverbackup dry-run reports archive plan"
@@ -463,7 +468,7 @@ test_serverbackup_missing_source_value() {
 
 test_serverbackup_keep_zero_skips_pruning() {
     local output
-    output="$(sed -n '160,185p' "$ROOT_DIR/refs/backups/serverbackup.sh")"
+    output="$(sed -n '190,205p' "$ROOT_DIR/refs/backups/serverbackup.sh")"
     assert_contains "$output" 'if [[ "$BACKUP_HISTORY" -gt 0 ]]; then' "serverbackup skips pruning when keep is zero"
 }
 
@@ -477,7 +482,9 @@ test_serverbackup_excludes_only_archive_when_backup_dir_equals_source() {
 test_serverbackup_canonicalizes_backup_dir() {
     local output
     output="$(sed -n '100,125p' "$ROOT_DIR/refs/backups/serverbackup.sh")"
-    assert_contains "$output" 'BACKUP_DIR="$(readlink -f "$BACKUP_DIR")"' "serverbackup canonicalizes backup dir before exclusion checks"
+    assert_contains "$output" 'BACKUP_DIR="$(readlink -m "$BACKUP_DIR")"' "serverbackup resolves backup dir without creating it before exclusion checks"
+    output="$(sed -n '155,170p' "$ROOT_DIR/refs/backups/serverbackup.sh")"
+    assert_contains "$output" 'BACKUP_DIR="$(readlink -f "$BACKUP_DIR")"' "serverbackup canonicalizes created backup dir before archive creation"
 }
 
 test_ssh_keygen_missing_type_value() {

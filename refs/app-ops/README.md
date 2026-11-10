@@ -30,7 +30,8 @@ How to use these safely:
 - for `python/`, pass explicit paths when the target repo does not use `app/` and `scripts/`
 - for `superset/`, use `--dry-run` first to confirm the user list and output paths before touching accounts
 - for `docker-compose/`, the lightweight `.env` parsing only supports `KEY=value` lines with optional surrounding single or double quotes; inline comments, escapes, and shell expansions are not interpreted safely
+- `docker-compose/stop.sh --clean` removes Compose volumes and images and deletes `DATA_DIRECTORY/middleware` (default `/data/middleware`). Review its dry-run output first; interactive runs ask for confirmation, while non-interactive runs require `--yes`.
 
 Do not treat this directory as plug-and-play generic tooling. Treat it as a set of concrete examples and reusable ideas.
 
-Last Reviewed: 2026-03-11
+Last Reviewed: 2026-11-10

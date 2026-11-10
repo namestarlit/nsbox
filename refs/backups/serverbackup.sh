@@ -106,8 +106,7 @@ if [[ ! -e "$SOURCE_PATH" ]]; then
     exit 1
 fi
 
-mkdir -p "$BACKUP_DIR"
-BACKUP_DIR="$(readlink -f "$BACKUP_DIR")"
+BACKUP_DIR="$(readlink -m "$BACKUP_DIR")"
 
 if [[ -z "$NAME_PREFIX" ]]; then
     if [[ "$SOURCE_PATH" == "/" ]]; then
@@ -158,6 +157,29 @@ if [[ "$DRY_RUN" == true ]]; then
     printf '\n'
     exit 0
 fi
+
+mkdir -p "$BACKUP_DIR"
+BACKUP_DIR="$(readlink -f "$BACKUP_DIR")"
+# Recompute the destination after canonicalizing a path that may not have existed
+# during dry-run planning.
+BACKUP_FILE="$BACKUP_DIR/${NAME_PREFIX}_${BACKUP_DATE}.tar.gz"
+TAR_ARGS=(--create --gzip --file "$BACKUP_FILE")
+if [[ "$SOURCE_PATH" == "/" ]]; then
+    TAR_ARGS+=(--directory=/ --exclude=lost+found --exclude=dev/* --exclude=proc/*)
+    TAR_ARGS+=(--exclude=run/* --exclude=sys/* --exclude=tmp/* --exclude=mnt/* --exclude=media/*)
+    TAR_ARGS+=(--exclude="${BACKUP_DIR#/}/*" .)
+else
+    TAR_PARENT="$(dirname "$SOURCE_PATH")"
+    TAR_ENTRY="$(basename "$SOURCE_PATH")"
+    TAR_ARGS+=(--directory="$TAR_PARENT")
+    if [[ "$BACKUP_DIR" == "$SOURCE_PATH/"* ]]; then
+        TAR_ARGS+=(--exclude="${BACKUP_DIR#$TAR_PARENT/}/*")
+    elif [[ "$BACKUP_DIR" == "$SOURCE_PATH" ]]; then
+        TAR_ARGS+=(--exclude="$(basename "$BACKUP_FILE")")
+    fi
+    TAR_ARGS+=("$TAR_ENTRY")
+fi
+for pattern in "${EXCLUDES[@]}"; do TAR_ARGS+=(--exclude="$pattern"); done
 
 tar "${TAR_ARGS[@]}"
 

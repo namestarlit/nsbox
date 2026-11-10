@@ -34,7 +34,7 @@ Recommended flow:
 Account model:
 
 - `setup_deploy_user.sh` creates a deploy-style account, not a normal admin account.
-- It manages a user-specific SSH block and a constrained sudoers drop-in.
+- It manages a user-specific SSH block and a sudoers drop-in. The default policy is highly privileged: Docker access (including Docker group membership) is effectively root access, and passwordless sudo for `mv`, `mkdir`, `chown`, and `chmod` is not restricted to particular arguments. Treat the deploy account as root-equivalent and only install keys for trusted automation.
 - This is the right choice when the account exists to move code, run Docker, and execute a known set of operational commands.
 - If you want a normal admin login in the `sudo` group, use `guides/server-bootstrap/create_sudo_user.sh` instead.
 
@@ -77,7 +77,7 @@ Assumptions:
 
 - Docker is already installed
 - the host should have a dedicated `deploy` user
-- passwordless sudo for selected commands is acceptable in this environment
+- root-equivalent deploy access is acceptable in this environment
 - swarm resources use the baked-in names in the script
 
 Side effects:
@@ -104,4 +104,4 @@ sudo docker info | grep Swarm
 sudo docker network ls | grep zanlis-network
 ```
 
-Last Reviewed: 2026-03-11
+Last Reviewed: 2026-11-10

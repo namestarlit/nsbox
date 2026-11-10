@@ -26,8 +26,9 @@ Notes:
 
 - `serverbackup.sh` is for filesystem archives.
   Use it when you want a compressed backup of a specific directory tree with retention and excludes.
+- `--dry-run` reports the planned destination and tar arguments without creating the backup directory or archive.
 
 - verify restore procedures separately; a backup script alone does not prove recoverability
 - review storage, retention, and credential handling before use in production
 
-Last Reviewed: 2026-03-11
+Last Reviewed: 2026-11-10

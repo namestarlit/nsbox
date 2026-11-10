@@ -44,3 +44,7 @@ Current layout:
 - `docs/script_documentation_guide.md`
 
 Start with the README inside the directory you plan to use. Those READMEs should tell you what the scripts do, when to use them, and how to run them.
+
+## License
+
+Licensed under the [MIT License](LICENSE).
